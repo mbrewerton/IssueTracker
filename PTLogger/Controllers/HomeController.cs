@@ -42,7 +42,7 @@ namespace PTLogger.Controllers
         }
 
         [HttpPost]
-        public ActionResult Create(UserStoryModel model, IEnumerable<HttpPostedFileBase> files)
+        public async Task<ActionResult> Create(UserStoryModel model, IEnumerable<HttpPostedFileBase> files)
         {
             var jsonSerializerSettings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
 
@@ -63,18 +63,30 @@ namespace PTLogger.Controllers
                     foreach (var file in files)
                     {
                         MultipartFormDataContent form = new MultipartFormDataContent();
-                        HttpContent content = new StringContent(file.FileName);
-                        form.Add(content, file.FileName);
-                        var stream = file.InputStream;
-                        content = new StreamContent(stream);
+                        // Create a new MemoryStream to enable us to create a byte[]
+                        MemoryStream target = new MemoryStream();
+                        // Copy our file Stream into our MemoryStream
+                        file.InputStream.CopyTo(target);
+                        // Convert our Stream to a byte[] to attach to our request
+                        byte[] data = target.ToArray();
+                        // Setup content of our request as a ByteArrayContent using our byte[] data
+                        var content = new ByteArrayContent(data);
+
                         content.Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data")
                         {
-                            Name = "fileToUpload",
+                            Name = "file",
                             FileName = file.FileName
                         };
                         form.Add(content);
                         var imageUrl = String.Format("https://www.pivotaltracker.com/services/v5/projects/{0}/uploads", CloudConfigurationManager.GetSetting("ProjectId"));
                         var response = fileClient.PostAsync(imageUrl, form).Result;
+
+                        if (response.IsSuccessStatusCode)
+                        {
+                            var attachmentJson = JsonConvert.DeserializeObject<AttachmentModel>(await response.Content.ReadAsStringAsync());
+                        }
+
+                        //Attach file to story
 
                         //Attach file to story
                     }
