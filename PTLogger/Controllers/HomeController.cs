@@ -59,36 +59,38 @@ namespace PTLogger.Controllers
 
                     var fileClient = new HttpClient();
                     fileClient.DefaultRequestHeaders.Add("X-TrackerToken", CloudConfigurationManager.GetSetting("Token"));
-
+                    
                     foreach (var file in files)
                     {
-                        MultipartFormDataContent form = new MultipartFormDataContent();
-                        // Create a new MemoryStream to enable us to create a byte[]
-                        MemoryStream target = new MemoryStream();
-                        // Copy our file Stream into our MemoryStream
-                        file.InputStream.CopyTo(target);
-                        // Convert our Stream to a byte[] to attach to our request
-                        byte[] data = target.ToArray();
-                        // Setup content of our request as a ByteArrayContent using our byte[] data
-                        var content = new ByteArrayContent(data);
-
-                        content.Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data")
+                        if (file != null)
                         {
-                            Name = "file",
-                            FileName = file.FileName
-                        };
-                        form.Add(content);
-                        var imageUrl = String.Format("https://www.pivotaltracker.com/services/v5/projects/{0}/uploads", CloudConfigurationManager.GetSetting("ProjectId"));
-                        var response = fileClient.PostAsync(imageUrl, form).Result;
+                            MultipartFormDataContent form = new MultipartFormDataContent();
+                            // Create a new MemoryStream to enable us to create a byte[]
+                            MemoryStream target = new MemoryStream();
+                            // Copy our file Stream into our MemoryStream
+                            file.InputStream.CopyTo(target);
+                            // Convert our Stream to a byte[] to attach to our request
+                            byte[] data = target.ToArray();
+                            // Setup content of our request as a ByteArrayContent using our byte[] data
+                            var content = new ByteArrayContent(data);
 
-                        if (response.IsSuccessStatusCode)
-                        {
-                            var attachmentJson = JsonConvert.DeserializeObject<AttachmentModel>(await response.Content.ReadAsStringAsync());
+                            content.Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data")
+                            {
+                                Name = "file",
+                                FileName = file.FileName
+                            };
+                            form.Add(content);
+                            var imageUrl = String.Format("https://www.pivotaltracker.com/services/v5/projects/{0}/uploads", CloudConfigurationManager.GetSetting("ProjectId"));
+                            var response = fileClient.PostAsync(imageUrl, form).Result;
+
+                            if (response.IsSuccessStatusCode)
+                            {
+                                var attachmentJson = JsonConvert.DeserializeObject<AttachmentModel>(await response.Content.ReadAsStringAsync());
+                                var resultContent = JsonConvert.DeserializeObject<UserStoryModel>(await result.Content.ReadAsStringAsync());
+                            }
+
+                            //Attach file to story
                         }
-
-                        //Attach file to story
-
-                        //Attach file to story
                     }
                 }
 
