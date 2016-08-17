@@ -7,16 +7,10 @@ namespace PTLogger.Models
 {
     public class UserStoryModel
     {
-        public UserStoryModel()
-        {
-            Labels = new List<String>
-            {
-                "Support"
-            };
-        }
-
+        public int Id { get; set; }
+        public int? ProjectId { get; set; }
         public String Name { get; set; }
         public String Description { get; set; }
-        public List<String> Labels { get; set; }
+        public List<LabelModel> Labels { get; set; }
     }
 }
