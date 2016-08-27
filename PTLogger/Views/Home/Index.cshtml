@@ -1,31 +1,26 @@
-﻿@{
-    ViewBag.Title = "Home Page";
+﻿@model PTLogger.Models.UserStoryModel
+@{
+    ViewBag.Title = "Create an Issue";
+}
+<h2>Create an Issue</h2>
+<h3>Please give as much detail as possible including steps to recreate
+    and if possible screenshots of errors</h3>
+</ br></ br>
+</ br></ br>
+@using (Html.BeginForm("Create", "Home", FormMethod.Post, new { enctype = "multipart/form-data" }))
+{
+    <label>Issue Summary</label>
+    @Html.TextBoxFor(model => model.Name)
+
+    <label>Detailed Description</label>
+    @Html.TextAreaFor(model => model.Description)
+
+    <div id="multiple">
+        <input type="file" class="multiple" name="files" multiple />
+    </div>
+
+    <button class="btn btn-default" type="submit">Submit</button>
 }
 
-<div class="jumbotron">
-    <h1>ASP.NET</h1>
-    <p class="lead">ASP.NET is a free web framework for building great Web sites and Web applications using HTML, CSS and JavaScript.</p>
-    <p><a href="http://asp.net" class="btn btn-primary btn-lg">Learn more &raquo;</a></p>
-</div>
 
-<div class="row">
-    <div class="col-md-4">
-        <h2>Getting started</h2>
-        <p>
-            ASP.NET MVC gives you a powerful, patterns-based way to build dynamic websites that
-            enables a clean separation of concerns and gives you full control over markup
-            for enjoyable, agile development.
-        </p>
-        <p><a class="btn btn-default" href="http://go.microsoft.com/fwlink/?LinkId=301865">Learn more &raquo;</a></p>
-    </div>
-    <div class="col-md-4">
-        <h2>Get more libraries</h2>
-        <p>NuGet is a free Visual Studio extension that makes it easy to add, remove, and update libraries and tools in Visual Studio projects.</p>
-        <p><a class="btn btn-default" href="http://go.microsoft.com/fwlink/?LinkId=301866">Learn more &raquo;</a></p>
-    </div>
-    <div class="col-md-4">
-        <h2>Web Hosting</h2>
-        <p>You can easily find a web hosting company that offers the right mix of features and price for your applications.</p>
-        <p><a class="btn btn-default" href="http://go.microsoft.com/fwlink/?LinkId=301867">Learn more &raquo;</a></p>
-    </div>
-</div>
+

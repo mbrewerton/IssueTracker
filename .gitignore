@@ -1,0 +1,9 @@
+_ReSharper.*
+bin/
+obj/
+packages/*/
+*.suo
+*.swp
+*.user
+sln.DottSettings
+sln.DottSettings.User

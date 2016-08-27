@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.Mail;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
@@ -16,14 +17,12 @@ using System.Web.Mvc;
 
 namespace PTLogger.Controllers
 {
+    [Authorize]
     public class HomeController : Controller
     {
-        private int _projectId = int.Parse(CloudConfigurationManager.GetSetting("ProjectId"));
+        private int _projectId = int.Parse(CloudConfigurationManager.GetSetting("Pivotal.ProjectId"));
 
-        public ActionResult Index()
-        {
-            return View();
-        }
+
 
         public ActionResult About()
         {
@@ -32,20 +31,14 @@ namespace PTLogger.Controllers
             return View();
         }
 
-        public ActionResult Contact()
-        {
-            ViewBag.Message = "Your contact page.";
 
-            return View();
-        }
-
-        public ActionResult Create()
+        public ActionResult Index()
         {
             return View();
         }
 
         [HttpPost]
-        public async Task<ActionResult> Create(NewUserStoryModel model, IEnumerable<HttpPostedFileBase> files)
+        public async Task<ActionResult> Index(NewUserStoryModel model, IEnumerable<HttpPostedFileBase> files)
         {
             var jsonSerializerSettings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
             
@@ -61,7 +54,7 @@ namespace PTLogger.Controllers
                 {
 
                     var fileClient = new HttpClient();
-                    fileClient.DefaultRequestHeaders.Add("X-TrackerToken", CloudConfigurationManager.GetSetting("Token"));
+                    fileClient.DefaultRequestHeaders.Add("X-TrackerToken", CloudConfigurationManager.GetSetting("Pivotal.Token"));
                     
                     foreach (var file in files)
                     {
@@ -113,7 +106,7 @@ namespace PTLogger.Controllers
                                     // Serialise our comment into Json using a LowerCaseContractResolver. The endpoint doesn't accept camelCase.
                                     var commentJson = JsonConvert.SerializeObject(comment, Formatting.Indented, new JsonSerializerSettings { ContractResolver = new LowerCaseContractResolver() });
                                     commentClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                                    commentClient.DefaultRequestHeaders.Add("X-TrackerToken", CloudConfigurationManager.GetSetting("Token"));
+                                    commentClient.DefaultRequestHeaders.Add("X-TrackerToken", CloudConfigurationManager.GetSetting("Pivotal.Token"));
                                     var commentResult = 
                                         commentClient.PostAsync(String.Format("https://www.pivotaltracker.com/services/v5/projects/{0}/stories/{1}/comments",
                                         _projectId, newUserStory.Id), new StringContent(commentJson, Encoding.UTF8, "application/json")).Result;
@@ -125,6 +118,20 @@ namespace PTLogger.Controllers
                         }
                     }
                 }
+
+               var emailEnabled = Boolean.Parse(CloudConfigurationManager.GetSetting("Email.Enabled"));
+               if (emailEnabled)
+               {
+                    var smtpClient = new SmtpClient();
+                    var mailMessage = new MailMessage(
+                        CloudConfigurationManager.GetSetting("Email.FromAddress"), 
+                        CloudConfigurationManager.GetSetting("Email.ToAddress"),
+                        $"New Issue Raised {model.Name}",
+                        model.Description);
+                    smtpClient.Send(mailMessage);
+               }
+
+
 
                 return View();
             }
@@ -149,7 +156,7 @@ namespace PTLogger.Controllers
             if (_client == null)
             {
                 _client = new HttpClient();
-                _client.DefaultRequestHeaders.Add("X-TrackerToken", CloudConfigurationManager.GetSetting("Token"));
+                _client.DefaultRequestHeaders.Add("X-TrackerToken", CloudConfigurationManager.GetSetting("Pivotal.Token"));
                 _client.DefaultRequestHeaders
                     .Accept
                     .Add(new MediaTypeWithQualityHeaderValue("application/json"));
